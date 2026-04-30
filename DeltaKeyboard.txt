@@ -8,6 +8,7 @@ local game = game
 local enum = Enum
 local instance = Instance.new
 local spawn = task.spawn
+local pcall = pcall
 local c3 = Color3.new
 local rgb = Color3.fromRGB
 local hsv = Color3.fromHSV
@@ -15,21 +16,53 @@ local u2 = UDim2.new
 local u = UDim.new
 local fn = Font.new
 
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local simulatekeypress = keypress or function(a)
-	VirtualInputManager:SendKeyEvent(true,a,false,game)
-end
-local simulatekeyrelease = keyrelease or function(a)
-	VirtualInputManager:SendKeyEvent(false,a,false,game)
+local cloneref = cloneref or function(ref)
+	if not getreg then return ref end
+	local InstanceList
+	local a = instance("Part")
+	for _, c in pairs(getreg()) do
+		if type(c) == "table" and #c then
+			if rawget(c, "__mode") == "kvs" then
+				for d, e in pairs(c) do
+					if e == a then
+						InstanceList = c
+						break
+					end
+				end
+			end
+		end
+	end
+	local f = {}
+	function f.invalidate(g)
+		if not InstanceList then
+			return
+		end
+		for b, c in pairs(InstanceList) do
+			if c == g then
+				InstanceList[b] = nil
+				return g
+			end
+		end
+	end
+	return f.invalidate
 end
 
-local gparent = (gethui and gethui()) or game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
+local plrs = game:GetService("Players")
 local ts = game:GetService("TweenService")
+
+--Delta always fuck up the key functions so just use the one provided by roblox engine
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local simulatekeypress = function(a)
+	VirtualInputManager:SendKeyEvent(true,a,false,game)
+end
+local simulatekeyrelease = function(a)
+	VirtualInputManager:SendKeyEvent(false,a,false,game)
+end
 
 local DLTA = {};
 
 -- StarterGui.DeltaKeyboard
-DLTA["1"] = instance("ScreenGui", gparent);
+DLTA["1"] = instance("ScreenGui");
 DLTA["1"]["Name"] = [[DeltaKeyboard]];
 DLTA["1"]["ZIndexBehavior"] = enum.ZIndexBehavior.Sibling;
 DLTA["1"]["ResetOnSpawn"] = false;
@@ -2869,3 +2902,19 @@ local function C_159()
 	end)
 end;
 spawn(C_159);
+
+local coregui = game:GetService("CoreGui")
+do
+	local hiddenui=get_hidden_gui or gethui
+	if hiddenui then
+		DLTA["1"].Parent=hiddenui()
+	elseif (not is_sirhurt_closure) and (syn and syn.protect_gui) then
+		syn.protect_gui(DLTA["1"])
+		DLTA["1"].Parent=coregui
+	elseif coregui then
+		DLTA["1"].Parent=coregui:FindFirstChild("RobloxGui") or coregui
+	else
+		DLTA["1"].DisplayOrder=2147483647
+		DLTA["1"].Parent=cloneref(plrs.LocalPlayer:FindFirstChildOfClass("PlayerGui"))
+	end
+end
