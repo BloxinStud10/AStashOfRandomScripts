@@ -15,6 +15,7 @@ local hsv = Color3.fromHSV
 local u2 = UDim2.new
 local u = UDim.new
 local fn = Font.new
+local KeyCode = enum.KeyCode
 
 local cloneref = cloneref or function(ref)
 	if not getreg then return ref end
@@ -47,16 +48,21 @@ local cloneref = cloneref or function(ref)
 	return f.invalidate
 end
 
-local plrs = game:GetService("Players")
-local ts = game:GetService("TweenService")
+local plrs = cloneref(game:GetService("Players"))
+local ts = cloneref(game:GetService("TweenService"))
+local uis = cloneref(game:GetService("UserInputService"))
 
 --Delta always fuck up the key functions so just use the one provided by roblox engine
-local VirtualInputManager = game:GetService("VirtualInputManager")
+local VirtualInput = uis:CreateVirtualInput()
+if not VirtualInput then
+	return error("[Delta Keyboard]: CreateVirtualInput couldnt be created")
+end
+local SendKey = VirtualInput.SendKey
 local simulatekeypress = function(a)
-	VirtualInputManager:SendKeyEvent(true,a,false,game)
+	pcall(SendKey,VirtualInput, true, a, false)
 end
 local simulatekeyrelease = function(a)
-	VirtualInputManager:SendKeyEvent(false,a,false,game)
+	pcall(SendKey, VirtualInput, false, a, false)
 end
 
 local DLTA = {};
@@ -2522,10 +2528,10 @@ local function C_56()
 		key.Name = keybind
 		key.Text = text
 		key.MouseButton1Up:Connect(function()
-			simulatekeyrelease(enum.KeyCode[keybind])
+			simulatekeyrelease(KeyCode[keybind])
 		end)
 		key.MouseButton1Down:Connect(function()
-			simulatekeypress(enum.KeyCode[keybind])		
+			simulatekeypress(KeyCode[keybind])		
 		end)
 		key.Close.MouseButton1Up:Connect(function()
 			key:Destroy()
@@ -2543,7 +2549,7 @@ local function C_56()
 						CreateFloatingKey(key, keys.Text)
 						IsSelecting.Value = false
 					else
-						simulatekeypress(enum.KeyCode[key])
+						simulatekeypress(KeyCode[key])
 					end
 				end)
 				keys.MouseButton1Up:Connect(function()
@@ -2552,7 +2558,7 @@ local function C_56()
 						CreateFloatingKey(key, keys.Text)
 						IsSelecting.Value = false
 					else
-						simulatekeyrelease(enum.KeyCode[key])
+						simulatekeyrelease(KeyCode[key])
 					end
 				end)
 			elseif string.find(keys.Name, "_") then
@@ -2564,7 +2570,7 @@ local function C_56()
 						CreateFloatingKey(key, keys.Text)
 						IsSelecting.Value = false
 					else
-						simulatekeypress(enum.KeyCode[key])
+						simulatekeypress(KeyCode[key])
 					end
 				end)
 				keys.MouseButton1Up:Connect(function()
@@ -2573,7 +2579,7 @@ local function C_56()
 						CreateFloatingKey(key, keys.Text)
 						IsSelecting.Value = false
 					else
-						simulatekeyrelease(enum.KeyCode[key])
+						simulatekeyrelease(KeyCode[key])
 					end
 				end)
 
@@ -2608,7 +2614,7 @@ local function C_56()
 						end
 					elseif ToggleShift.Value == true then
 						if IsSelecting.Value == false then
-							simulatekeypress(enum.KeyCode[keys.Name])
+							simulatekeypress(KeyCode[keys.Name])
 						elseif IsSelecting.Value == true then
 							IsSelecting.Value = false
 							CreateFloatingKey(keys.Name, keys.Name)
@@ -2645,7 +2651,7 @@ local function C_56()
 						end
 					elseif ToggleShift.Value == true then
 						if IsSelecting.Value == false then
-							simulatekeypress(enum.KeyCode[keys.Name])
+							simulatekeypress(KeyCode[keys.Name])
 						elseif IsSelecting.Value == true then
 							IsSelecting.Value = false
 							CreateFloatingKey(keys.Name, keys.Name)
@@ -2654,7 +2660,7 @@ local function C_56()
 				end)
 				keys.MouseButton1Down:Connect(function()
 					if ToggleShift.Value == true then
-						simulatekeypress(enum.KeyCode[keys.Name])
+						simulatekeypress(KeyCode[keys.Name])
 					end
 				end)
 
@@ -2664,7 +2670,7 @@ local function C_56()
 						CreateFloatingKey(keys.Text, keys.Text)
 						IsSelecting.Value = false
 					else
-						simulatekeypress(enum.KeyCode[keys.Name])
+						simulatekeypress(KeyCode[keys.Name])
 					end
 
 				end)
@@ -2673,7 +2679,7 @@ local function C_56()
 						CreateFloatingKey(keys.Text, keys.Text)
 						IsSelecting.Value = false
 					else
-						simulatekeyrelease(enum.KeyCode[keys.Name])
+						simulatekeyrelease(KeyCode[keys.Name])
 					end
 				end)
 			end		
@@ -2881,10 +2887,10 @@ local function C_152()
 			key.Draggable = true
 			key.Name = textbox.Text
 			key.MouseButton1Up:Connect(function()
-				simulatekeyrelease(enum.KeyCode[textbox.Text])
+				simulatekeyrelease(KeyCode[textbox.Text])
 			end)
 			key.MouseButton1Down:Connect(function()
-				simulatekeypress(enum.KeyCode[textbox.Text])
+				simulatekeypress(KeyCode[textbox.Text])
 			end)
 			key.Close.MouseButton1Up:Connect(function()
 				key:Destroy()
@@ -2910,9 +2916,9 @@ do
 		DLTA["1"].Parent=hiddenui()
 	elseif (not is_sirhurt_closure) and (syn and syn.protect_gui) then
 		syn.protect_gui(DLTA["1"])
-		DLTA["1"].Parent=coregui
+		DLTA["1"].Parent=cloneref(coregui)
 	elseif coregui then
-		DLTA["1"].Parent=coregui:FindFirstChild("RobloxGui") or coregui
+		DLTA["1"].Parent=cloneref(coregui:FindFirstChild("RobloxGui") or coregui)
 	else
 		DLTA["1"].DisplayOrder=2147483647
 		DLTA["1"].Parent=cloneref(plrs.LocalPlayer:FindFirstChildOfClass("PlayerGui"))
